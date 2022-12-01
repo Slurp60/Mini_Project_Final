@@ -1,0 +1,57 @@
+/*
+ * Lab2Experimentsl.c
+ *
+ * Created: 02/11/2022 17:39:17
+ * Author : yeah-
+ */ 
+//pin 10 = pushbutton, pin 9 = LED, pin 8 = PIR, pin 2,3,6 = H-bridge
+
+#include <avr/io.h>
+#define F_CPU 16000000UL //Microcontroller clock frequency defined
+#include <avr/interrupt.h>
+#include <util/delay.h>
+
+void T1_Delay_max_ms() //Defining the timer parameters
+{  
+   TCNT1 = 0x0000; //Starts counter from the beginning for longest time
+   TCCR1A = 0x00; //Normal mode
+   TCCR1B = 0x05; //1024 prescaler
+   while ((TIFR1 & 0x1)==0);
+   TCCR1B = 0; //Stops timer
+   TIFR1 = 1<<TOV1;
+}
+
+ISR(INT0_vect) //Defining the interrupt
+{  
+   if (PINB & (1 << PINB0)) //If HIGH value detected in Pin8
+   {
+   OCR0A = 0x33; //50% duty cycle in order to switch on motor at half speed
+   PORTB = 0x02; //HIGH value in Pin9 to switch on LED
+
+   }      
+   if (PINB & (1 << PINB2)) //If HIGH value detected due to depression of the pushbutton
+   {
+   OCR0A = 0xFF; //Switch motor off
+   PORTB = 0x00; //Switch LED off
+   T1_Delay_max_ms(); //Allow time for user to leave room before reactivation of system
+   }              
+}
+
+int main(void)
+{
+	//H-bridge configuration for motor control
+	DDRD |= (1 << 2) | (1 << 3); //Pin2 and Pin3 are outputs
+	DDRD |= (1 << 6); //Pin6 is an output
+  DDRB = 0x02; //Pin9 is an output
+  PORTB = 0x00;
+	PORTD = 0x08;
+	TCCR0A = 0xC3; //Fast PWM mode, inverting mode
+	TCCR0B = 0x05; //1024 prescaler
+	OCR0A = 0xFF; //Motor OFF 
+  EIMSK = (1<<INT0); //External interrupt enabled
+  sei(); //Interrupt enabled
+	while (1) //Does nothing until interrupt activated 
+  {        
+	}
+}
+
