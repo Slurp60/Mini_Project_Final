@@ -27,7 +27,6 @@ ISR(INT0_vect) //Defining the interrupt
    {
    OCR0A = 0x33; //50% duty cycle in order to switch on motor at half speed
    PORTB = 0x02; //HIGH value in Pin9 to switch on LED
-
    }      
    if (PINB & (1 << PINB2)) //If HIGH value detected due to depression of the pushbutton
    {
